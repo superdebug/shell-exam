@@ -1,0 +1,468 @@
+1.  
+在每一行后面增加一空行 
+  #sed 'G' passwd
+  #awk 'NR;{print ""}' passwd
+  #awk '{print $0 "\n"}' passwd
+  #awk '{printf("%s\n\n",$0)}' passwd  （在每一行后面增加一空行 ）
+  #awk 'NR{print $0 "\n"}' passwd
+  #awk '1;{print ""}' passwd
+  #awk 'BEGIN{ORS="\n\n"};1' passwd
+  #awk 'BEGIN{ORS="\n\n"};{print}' passwd
+
+2. 每行后面增加两行空行 
+  
+ #sed 'G;G' passwd
+ #awk '{print $0 "\n\n"}' passwd
+ #awk '1;{print "\n"}' passwd
+ #awk 'NR;{print "\n"}' passwd
+3.将原来的所有空行删除并在每一行后面增加一空行。
+
+#sed '/^$/d;G' passwd
+#awk '!/^$/{printf("%s\n\n",$0)}' passwd
+#awk 'NF{print $0 "\n"}' passwd
+#awk 'NF;NF{print ""}' passwd
+4.数字每3位以逗号为分隔符（eg：12，345，678）
+#sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'
+#sed -r -e :a -e 's/(.*[0-9])([0-9]{3})/\1,\2/;ta'
+#awk '{while(match($0,/[0-9][0-9][0-9][0-9]+/)){$0=sprintf("%s,%s",substr($0,0,RSTART+RLENGTH-4),substr($0,RSTART+RLENGTH-3))}print $0}'
+
+5# 显示文件中的前10行 （模拟“head”的行为）
+
+sed ‘10q’passwd
+awk 'NR<11' passwd
+awk '{print;if(NR==10)exit}' passwd 
+
+6.显示文件中的第10行 
+sed -n '10p' passwd
+awk 'NR==10' passwd
+awk 'NR==10{print}' passwd
+
+7.# 显示部分文本——指定行号范围（从第8至第12行，含8和12行）
+sed -n '8,12p'                   # 方法1
+sed '8,12!d'                     # 方法2
+awk '{if(NR>=8 && NR<12)print}'
+awk 'NR==8,NR==12' passwd
+8.显示文件中的后10行（tail）
+#sed -e :a -e '$q;N;11,$D;ba'
+
+9.显示文件中的最后一行（模拟“tail -1”）
+#sed -n '$p' passwd
+#sed '$!d' passwd
+#awk 'END{print}' passwd
+10.显示文中的倒数第二行
+sed -e '$!{h;d;}' -e x              # 当文件中只有一行时，输出空行
+sed -e '1{$q;}' -e '$!{h;d;}' -e x  # 当文件中只有一行时，显示该行
+sed -e '1{$d;}' -e '$!{h;d;}' -e x  # 当文件中只有一行时，不输出
+awk '{B=A;A=$0}END{print B}'
+
+11.删除空白行
+#sed '/^$/d' passwd
+#awk 'NF' passwd
+#sed '/^\s*$/d' passwd
+#sed -r 's@^$|^#|\s@@g;/^$/d' passwd （删除空行，空格，tab行，#开头，删除的比较彻底，空行之间也删除了）
+12.打印第10行和第15行
+#sed -n '10p;15p' passwd
+#awk 'NR==10;NR==15' passwd
+
+
+13.打印前12行，并显示行号（行号与内容用空格隔开）
+
+#awk 'NR<13{print NR " " $0}' passwd （行号与内容用空格隔开）
+#sed -n '1,12=;1,12p'  passwd （行号在内容上方）
+
+14..打印前12行，并显示行号（行号与内容用\tab隔开）
+#awk 'NR<13{print NR "\t" $0}' passwd
+#sed = passwd | sed -n 'N;s/\n/\t/;1,24p'
+
+
+15. 打印空白行
+ #grep -n "^$" passwd
+ #sed -n '/^$/=' passwd
+ #awk '/^$/{print NR}' passwd
+
+16.求和
+#awk '{A+=$1}END{print A}' 1 （第一列全是数字，相加求和）
+
+17.把123456求和
+
+#echo 123456|awk  'BEGIN{FS=""}{for (i=1;i<=NF;i++) sum+=$i;print sum}'
+#echo 123456|awk  'BEGIN{FS="";OFS="+"}{$1=$1;print $0}'|bc
+#echo 123456|sed  's/[0-9]/&+/g'|sed  's/\(.*\)+/\1/g'|bc
+
+18.只显示父目录（意识就是除去最后一个）
+#echo "/usr/local/nginx/conf/"|sed -r 's#^(/.*/)[^/]+/?#\1#g'
+#echo "/usr/local/nginx/conf"|sed -r 's#^(/.*/)([^/]+/?)#\2#g'
+ （只显示子目录）
+19.只显示奇数行，并显示行号。
+#sed -n '1~2=;1~2p' passwd
+
+以下内容用sed和awk分别实现
+
+
+
+20.# 删除8的倍数行
+
+sed '0~8d'  passwd                         # 只对GNU sed有效
+sed 'n;n;n;n;n;n;n;d;'   passwd             # 其他sed
+awk '{if(NR%8!=0)print}' passwd
+
+21.将文件单双行互换
+#seq 10|awk 'BEGIN{OFS="\n"}{if (NR%2==1) getline a;print a,$0}' 
+#seq 10|awk 'BEGIN{OFS="\n"}{getline a;print a,$0}'
+#seq 10|sed -r 'N;s#(.*)\n(.*)#\2\n\1#g' 
+#seq 10|sed -n 'h;n;G;p'
+
+1 在每一行后面增加一空行
+sed G
+awk '{printf("%s\n\n",$0)}'
+
+2 # 将原来的所有空行删除并在每一行后面增加一空行。
+# 这样在输出的文本中每一行后面将有且只有一空行。
+
+sed '/^$/d;G'
+awk '!/^$/{printf("%s\n\n",$0)}'
+
+# 在每一行后面增加两行空行
+
+sed 'G;G'
+awk '{printf("%s\n\n\n",$0)}'
+
+# 在匹配式样“regex”的行之前插入一空行
+
+sed '/regex/{x;p;x;}'
+awk '{if(/regex/)printf("\n%s\n",$0);else print $0}'
+
+# 在匹配式样“regex”的行之后插入一空行
+
+sed '/regex/G'
+awk '{if(/regex/)printf("%s\n\n",$0);else print $0}'
+
+# 为文件中的每一行进行编号（简单的左对齐方式）。这里使用了“制表符”
+# （tab，见本文末尾关于’\t’的用法的描述）而不是空格来对齐边缘。
+
+sed = filename | sed 'N;s/\n/\t/'
+awk '{i++;printf("%d\t%s\n",i,$0)}'
+
+# 计算行数 （模拟 “wc -l”）
+
+sed -n '$='
+awk '{i++}END{print i}'
+
+# 只在行中出现字串“baz”的情况下将“foo”替换成“bar”
+
+sed '/baz/s/foo/bar/g'
+awk '{if(/baz/)gsub(/foo/,"bar");print $0}'
+# 将“foo”替换成“bar”，并且只在行中未出现字串“baz”的情况下替换
+
+sed '/baz/!s/foo/bar/g'
+awk '{if(/baz$/)gsub(/foo/,"bar");print $0}'
+# 不管是“scarlet”“ruby”还是“puce”，一律换成“red”
+
+sed 's/scarlet/red/g;s/ruby/red/g;s/puce/red/g'  #对多数的sed都有效
+gsed 's/scarlet\|ruby\|puce/red/g'               # 只对GNU sed有效
+awk '{gsub(/scarlet|ruby|puce/,"red");print $0}'
+
+# 倒置所有行，第一行成为最后一行，依次类推（模拟“tac”）。
+# 由于某些原因，使用下面命令时HHsed v1.5会将文件中的空行删除
+
+sed '1!G;h;$!d'               # 方法1
+sed -n '1!G;h;$p'             # 方法2
+awk '{A[i++]=$0}END{for(j=i-1;j>=0;j--)print A[j]}'
+# 将行中的字符逆序排列，第一个字成为最后一字，……（模拟“rev”）
+
+sed '/\n/!G;s/\(.\)\(.*\n\)/&\2\1/;//D;s/.//'
+awk '{for(i=length($0);i>0;i--)printf("%s",substr($0,i,1));printf("\n")}'
+# 将每两行连接成一行（类似“paste”）
+sed '$!N;s/\n/ /'
+awk '{f=!f;if(f)printf("%s",$0);else printf(" %s\n",$0)}'
+
+# 为数字字串增加逗号分隔符号，将“1234567”改为“1,234,567”
+
+sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'                     # GNU sed
+sed -e :a -e 's/\(.*[0-9]\)\([0-9]\{3\}\)/\1,\2/;ta'  # 其他sed
+#awk的正则没有后向匹配和引用，搞的比较狼狈，呵呵。
+
+awk '{while(match($0,/[0-9][0-9][0-9][0-9]+/)){$0=sprintf("%s,%s",substr($0,0,RSTART+RLENGTH-4),substr($0,RSTART+RLENGTH-3))}print $0}'
+
+# 显示文件中的前10行 （模拟“head”的行为）
+
+sed 10q
+awk '{print;if(NR==10)exit}'
+# 显示文件中的第一行 （模拟“head -1”命令）
+
+sed q
+awk '{print;exit}'
+# 显示文件中的最后10行 （模拟“tail”）
+
+sed -e :a -e '$q;N;11,$D;ba'
+
+
+# 显示文件中的最后一行（模拟“tail -1”）
+
+sed '$!d'                        # 方法1
+sed -n '$p'                      # 方法2
+#这个比较好办，只存最后一行了。
+
+
+awk '{A=$0}END{print A}'
+# 显示文件中的倒数第二行
+
+sed -e '$!{h;d;}' -e x              # 当文件中只有一行时，输出空行
+sed -e '1{$q;}' -e '$!{h;d;}' -e x  # 当文件中只有一行时，显示该行
+sed -e '1{$d;}' -e '$!{h;d;}' -e x  # 当文件中只有一行时，不输出
+#存两行呗（当文件中只有一行时，输出空行）
+
+awk '{B=A;A=$0}END{print B}'
+# 只显示匹配正则表达式的行（模拟“grep”）
+
+sed -n '/regexp/p'               # 方法1
+sed '/regexp/!d'                 # 方法2
+awk '/regexp/{print}'
+# 只显示“不”匹配正则表达式的行（模拟“grep -v”）
+
+sed -n '/regexp/!p'              # 方法1，与前面的命令相对应
+sed '/regexp/d'                  # 方法2，类似的语法
+awk '!/regexp/{print}'
+
+# 显示包含“AAA”、“BBB”和“CCC”的行（任意次序）
+
+sed '/AAA/!d; /BBB/!d; /CCC/!d'   # 字串的次序不影响结果
+awk '{if(match($0,/AAA/) && match($0,/BBB/) && match($0,/CCC/))print}'
+# 显示包含“AAA”、“BBB”和“CCC”的行（固定次序）
+
+sed '/AAA.*BBB.*CCC/!d'
+awk '{if(match($0,/AAA.*BBB.*CCC/))print}'
+
+
+# 显示包含65个或以上字符的行
+
+sed -n '/^.\{65\}/p'
+cat ll.txt | awk '{if(length($0)>=65)print}'
+
+# 显示包含65个以下字符的行
+
+sed -n '/^.\{65\}/!p'            # 方法1，与上面的脚本相对应
+sed '/^.\{65\}/d'                # 方法2，更简便一点的方法
+awk '{if(length($0)<=65)print}'
+
+# 显示部分文本——指定行号范围（从第8至第12行，含8和12行）
+
+sed -n '8,12p'                   # 方法1
+sed '8,12!d'                     # 方法2
+awk '{if(NR>=8 && NR<12)print}'
+# 显示第52行
+
+sed -n '52p'                     # 方法1
+sed '52!d'                       # 方法2
+sed '52q;d'                      # 方法3, 处理大文件时更有效率
+awk '{if(NR==52){print;exit}}'
+# 从第3行开始，每7行显示一次
+
+gsed -n '3~7p'                   # 只对GNU sed有效
+sed -n '3,${p;n;n;n;n;n;n;}'     # 其他sed
+awk '{if(NR==3)F=1}{if(F){i++;if(i%7==1)print}}'
+
+# 删除文件中相邻的重复行（模拟“uniq”）
+# 只保留重复行中的第一行，其他行删除
+
+
+sed '$!N; /^\(.*\)\n\1$/!P; D'
+awk '{if($0!=B)print;B=$0}'
+
+# 删除文件中的最后两行
+
+sed 'N;$!P;$!D;$d'
+awk '{B[NR]=$0}END{for(i=0;i<=NR-2;i++)print B[i]}'
+# 删除文件中的最后10行
+
+sed -e :a -e '$d;N;2,10ba' -e 'P;D'   # 方法1
+sed -n -e :a -e '1,10!{P;N;D;};N;ba'  # 方法2
+awk '{B[NR]=$0}END{for(i=0;i<=NR-10;i++)print B[i]}'
+# 删除8的倍数行
+
+sed '0~8d'                           # 只对GNU sed有效
+sed 'n;n;n;n;n;n;n;d;'                # 其他sed
+awk '{if(NR%8!=0)print}' |head
+
+#seq 1 10|sed '1!G;h;$!d'                      # 倒叙排列
+
+#ls -l|sed -n '/^.rwx.*/p'                     # 查找属主权限为7的文件
+
+#sed = filename | sed 'N;s/\n/\t/'             # 为文件中的每一行进行编号
+
+(简单的左对齐方式)
+
+
+#sed = filename | sed 'N;s/^/      /; s/ *\(.\{6,\}\)\n/\1   /'   # 对文件中的所有行编号(行号在左，文字右端对齐)
+
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+100					100	        
+a      100                    a       100                               
+b	 -50                    200                    
+c      -20                    b        -50             
+d	 -30                    150                  
+					c        -20
+					130
+					d	   -30	
+
+#awk  'NR==1{sum=$1;print $0}NR!=1{print $0;sum=sum-$2;print sum}' 
+
+
+
+
+将passwd全文归为一行
+awk '{printf"%s",$0}' passwd 
+
+#awk '/xxoo/{system("mail xxoo")}' urfile  （neizhimingling）
+
+
+
+
+#join <(sort file1) <(sort file2)
+ 
+
+#awk 'NR==FNR{a[$1]=$2;next}{print $0,a[$1]}' 1.test 2.test
+
+      韩林海 男 22岁
+      海林韩 男 23岁
+      韩海林 男 21岁
+      林海韩 男 24岁
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+文件file：
+
+A  XXOO   22
+B  XXODO  13
+C  XXOOD  32
+D  XXOOD  9
+
+
+要求的结果是 （在原文的基础上中增加一列，对第三例的值依次相加求和，效果如下）
+
+#awk '{a+=$3;print $0,a}' file
+
+A  XXOO   22   22
+B  XXODO  13   35 
+C  XXOOD  32   67
+D  XXOOD  9    76
+
+#cat 1.txt 
+A  XXOO   22
+B  XXODO  13
+C  XXOOD  32
+D  XXOOD  9
+
+#cat 1.txt |awk '{a+=$3;print $0,a}'
+A  XXOO   22 22
+B  XXODO  13 35
+C  XXOOD  32 67
+D  XXOOD  9 76
+
+
+
+
+
+
+#匹配以数字开头，并且下一行是以字母开头的行
+
+#sed -nr 'N;/^[0-9]+.+\n[a-z]/p;D'
+
+#awk '/^[a-z]/&&s~/^[0-9]/{print s"\n"$0}{s=$0}'
+
+
+
+
+
+#打印以abc结尾并且下一行是以bcd开头的行
+
+#awk '/^bcd/&&s~/abc$/{print s"\n"$0}{s=$0}' 
+
+
+
+
+#awk 'NR==FNR{a[$0]=$0;next}{print a[$0],$0}' file1 file2 
+
+
+
+
+（对比两个文件不一样的东西）
+
+
+#awk 'NR==FNR{a[$0]=$0;next}NR!=FNR{if(a[$0]!=$0)print}' file1 file
+
+
+#diff -u rc3.d rc5.d (对比两个文件不一样的东西)
+
+
+
+#awk -F: '{a[$1]=a[$1] OFS  $2}END{for(i in a)print i,a[i]}' file1
+
+
+#awk '{a[$1]=a[$1]"\t"$2;b[$1]=b[$1]"\t"$3;}END{for (i in a){printf "date      %-s\n%-s %-s\n" ,a[i],i,b[i]}}'
+
+
+#将【admin】开头的IP取出来
+
+[root@liudehua test1]# cat 1.txt 
+[test-admin-web]
+1.1.1.1
+2.2.2.2
+333.333.4.5
+2.3.4.5
+[test-admin-db]
+1.2.3.4
+1.2.4.5
+1.2.4.4
+1.1.1.1
+[test-xxxx-db]
+333.333.333.333
+
+1）
+[root@liudehua test1]# awk '/admin/{p=1;next};/^\[/&&!/admin/{p=0}p' 1.txt 
+1.1.1.1
+2.2.2.2
+333.333.4.5
+2.3.4.5
+1.2.3.4
+1.2.4.5
+1.2.4.4
+1.1.1.1
+2）
+[root@liudehua test1]# awk -vRS='\\[[^]]+\\]\n' 'p~/admin/;{p=RT}'  1.txt
+1.1.1.1
+2.2.2.2
+333.333.4.5
+2.3.4.5
+
+1.2.3.4
+1.2.4.5
+1.2.4.4
+1.1.1.1
+
+
+

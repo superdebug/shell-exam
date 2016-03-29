@@ -1,0 +1,4 @@
+#/usr/bin/rsync --daemon --config=/etc/rsyncd/rsyncd.conf （启动rsync服务）
+
+#rsync -av /data/mysqlbackup/ rsync://10.30.0.18/db_backup/
+（从一台服务器上同步数据到另一台服务器上）
